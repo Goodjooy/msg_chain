@@ -1,4 +1,6 @@
-use crate::{ChainMeta, IntoChainMeta, Number};
+use std::collections::HashMap;
+
+use crate::{ChainMeta, IntoChainMeta, LoadFormMap, Number};
 use crate::{FromChainMeta, MessageChain};
 use serde::{ser::SerializeStruct, Serialize};
 
@@ -29,6 +31,12 @@ impl<T: FromChainMeta> FromChainMeta for Option<T> {
         } else {
             Some(None)
         }
+    }
+}
+
+impl ChainMeta {
+    pub fn into_target<T: FromChainMeta>(&self) -> Option<T> {
+        T::from_chain(Some(self))
     }
 }
 
@@ -68,5 +76,17 @@ impl Serialize for dyn MessageChain {
             .collect::<Vec<_>>();
 
         data.end()
+    }
+}
+
+impl dyn MessageChain {
+    pub fn into_target<T: LoadFormMap>(&self) -> Option<T> {
+        let mut map = HashMap::new();
+        map.insert("type".to_string(), self.get_type().into_chain());
+
+        for (k, v) in self.get_all() {
+            map.insert(k.to_string(), v);
+        }
+        T::load_from_map(&map)
     }
 }

@@ -7,6 +7,7 @@ pub mod impls;
 // data that contain in evry chain
 #[derive(Debug, PartialEq, Clone)]
 pub enum ChainMeta {
+
     Null,
     Str(String),
     Bool(bool),
@@ -15,6 +16,8 @@ pub enum ChainMeta {
     Map(HashMap<&'static str, ChainMeta>),
     MapOwn(HashMap<String, ChainMeta>),
 }
+
+// differnt type of number for chain meta
 #[derive(Debug, PartialEq, Clone)]
 pub enum Number {
     N(u64),
@@ -22,6 +25,8 @@ pub enum Number {
     Float(f64),
 }
 
+
+/// Message Chain
 pub trait MessageChain {
     fn get_type(&self) -> &'static str;
     fn get(&self, key: &str) -> Option<ChainMeta>;
@@ -38,6 +43,8 @@ pub trait LoadFormMap: Sized + MessageChain {
     fn load_from_map(map: &HashMap<String, ChainMeta>) -> Option<Self>;
 }
 
+/// into Chain Meta 
+///  transfrom a type into Chain meta
 pub trait IntoChainMeta {
     fn into_chain(&self) -> ChainMeta;
 }
@@ -180,6 +187,7 @@ mod test {
             .collect();
 
         let res = message_chain_loader(&map).unwrap();
+        let res=res.into_target::<Plain>().unwrap();
 
         assert_eq!("Plain", res.get_type());
         assert_eq!("好耶".into_chain(), res.get("text").unwrap())
