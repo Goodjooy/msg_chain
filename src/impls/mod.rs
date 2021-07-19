@@ -3,8 +3,8 @@ use crate::{FromChainMeta, MessageChain};
 use serde::{ser::SerializeStruct, Serialize};
 
 mod collection;
-mod number;
 mod json;
+mod number;
 
 impl<T> IntoChainMeta for Option<T>
 where
@@ -19,11 +19,15 @@ where
 }
 
 impl<T: FromChainMeta> FromChainMeta for Option<T> {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Null = chain {
-            Some(None)
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let Some(_) = chain {
+            if let Some(ChainMeta::Null) = chain {
+                Some(None)
+            } else {
+                Some(Some(T::from_chain(chain)?))
+            }
         } else {
-            Some(Some(T::from_chain(chain)?))
+            Some(None)
         }
     }
 }
@@ -66,4 +70,3 @@ impl Serialize for dyn MessageChain {
         data.end()
     }
 }
-

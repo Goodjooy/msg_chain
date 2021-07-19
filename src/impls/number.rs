@@ -67,8 +67,8 @@ impl IntoChainMeta for bool {
 }
 
 impl FromChainMeta for bool {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Bool(b)=chain{
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Bool(b)=chain?{
             Some(*b)
         }else {
             None
@@ -77,8 +77,8 @@ impl FromChainMeta for bool {
 }
 
 impl FromChainMeta for u8 {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Num(n) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Num(n) = chain? {
             if let Number::N(n) = n {
                 let s = n.to_string();
                 Self::from_str_radix(&s, 10).ok()
@@ -92,8 +92,8 @@ impl FromChainMeta for u8 {
 }
 
 impl FromChainMeta for u16 {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Num(n) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Num(n) = chain? {
             if let Number::N(n) = n {
                 let s = n.to_string();
                 Self::from_str_radix(&s, 10).ok()
@@ -107,8 +107,8 @@ impl FromChainMeta for u16 {
 }
 
 impl FromChainMeta for u32 {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Num(n) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Num(n) = chain? {
             if let Number::N(n) = n {
                 let s = n.to_string();
                 Self::from_str_radix(&s, 10).ok()
@@ -122,8 +122,8 @@ impl FromChainMeta for u32 {
 }
 
 impl FromChainMeta for u64 {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Num(n) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Num(n) = chain? {
             if let Number::N(n) = n {
                 Some(*n)
             } else {
@@ -136,8 +136,8 @@ impl FromChainMeta for u64 {
 }
 
 impl FromChainMeta for i8 {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Num(n) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Num(n) = chain? {
             if let Number::T(n) = n {
                 let s = n.to_string();
                 Self::from_str_radix(&s, 10).ok()
@@ -151,8 +151,8 @@ impl FromChainMeta for i8 {
 }
 
 impl FromChainMeta for i16 {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Num(n) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Num(n) = chain? {
             if let Number::T(n) = n {
                 let s = n.to_string();
                 Self::from_str_radix(&s, 10).ok()
@@ -166,8 +166,8 @@ impl FromChainMeta for i16 {
 }
 
 impl FromChainMeta for i32 {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Num(n) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Num(n) = chain? {
             if let Number::T(n) = n {
                 let s = n.to_string();
                 Self::from_str_radix(&s, 10).ok()
@@ -181,8 +181,8 @@ impl FromChainMeta for i32 {
 }
 
 impl FromChainMeta for i64 {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Num(n) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Num(n) = chain? {
             if let Number::T(n) = n {
                 Some(*n)
             } else {
@@ -194,8 +194,8 @@ impl FromChainMeta for i64 {
     }
 }
 impl FromChainMeta for f32 {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Num(n) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Num(n) = chain? {
             if let Number::Float(n) = n {
                 let s = n.to_string();
                 let n:f32=s.parse().ok()?;
@@ -210,8 +210,8 @@ impl FromChainMeta for f32 {
 }
 
 impl FromChainMeta for f64 {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Num(n) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Num(n) = chain? {
             if let Number::Float(n) = n {
                 Some(*n)
             } else {

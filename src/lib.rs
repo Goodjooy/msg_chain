@@ -13,7 +13,7 @@ pub enum ChainMeta {
     Num(Number),
     SubChains(Vec<ChainMeta>),
     Map(HashMap<&'static str, ChainMeta>),
-    MapOwn(HashMap<String,ChainMeta>)
+    MapOwn(HashMap<String, ChainMeta>),
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum Number {
@@ -43,7 +43,7 @@ pub trait IntoChainMeta {
 }
 
 pub trait FromChainMeta: Sized {
-    fn from_chain(chain: &ChainMeta) -> Option<Self>;
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self>;
 }
 
 #[macro_export]
@@ -60,8 +60,6 @@ macro_rules! msg_loader_generate {
         }
     };
 }
-
-
 
 #[cfg(test)]
 mod test {
@@ -116,15 +114,11 @@ mod test {
     }
     #[test]
     fn test_from_named_fail() {
-        
         let map: HashMap<String, ChainMeta> = HashMap::new();
 
         let res = Plain::load_from_map(&map);
 
-        assert_eq!(
-            None,
-            res
-        )
+        assert_eq!(None, res)
     }
 
     #[derive(MessageChain, LoadFormMap, PartialEq, Debug)]
@@ -163,18 +157,14 @@ mod test {
 
     #[test]
     fn test_from_unit_fail() {
-        
         let map: HashMap<String, ChainMeta> = HashMap::new();
 
         let res = AtAll::load_from_map(&map);
 
-        assert_eq!(
-            None,
-            res
-        )
+        assert_eq!(None, res)
     }
 
-    msg_loader_generate!(Plain,AtAll);
+    msg_loader_generate!(Plain, AtAll);
 
     #[test]
     fn test_msg_chain_picker() {
@@ -189,10 +179,9 @@ mod test {
             .map(|f| map.insert(f.clone().0, f.clone().1))
             .collect();
 
-        let res=message_chain_loader(&map).unwrap();
-        
+        let res = message_chain_loader(&map).unwrap();
 
-        assert_eq!("Plain",res.get_type());
-        assert_eq!("好耶".into_chain(),res.get("text").unwrap())
+        assert_eq!("Plain", res.get_type());
+        assert_eq!("好耶".into_chain(), res.get("text").unwrap())
     }
 }

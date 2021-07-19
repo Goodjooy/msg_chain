@@ -3,6 +3,7 @@ use quote::quote;
 use syn::{Data, Generics};
 use syn::{DeriveInput, Type};
 
+
 #[proc_macro_derive(LoadFormMap)]
 pub fn msg_chain_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
@@ -27,7 +28,7 @@ fn impl_from_chains_macro(ast: &DeriveInput) -> TokenStream {
 
         let (t,b)=load_type(ty);
         quote! {
-            let #name  :#t = #b::from_chain(map.get(stringify!(#name))?)?;
+            let #name  :#t = #b::from_chain(map.get(stringify!(#name)))?;
         }
     });
 
@@ -48,7 +49,7 @@ fn impl_from_chains_macro(ast: &DeriveInput) -> TokenStream {
     let gen = quote! {
         impl #head_g LoadFormMap  for #name #head_g #where_c {
             fn load_from_map(map: &HashMap<String, ChainMeta>) -> Option<Self> {
-                let __ty = map.get("type")?;
+                let __ty = map.get("type");
                 let s = String::from_chain(__ty)?;
                 if s != stringify!(#name) {
                     return None;

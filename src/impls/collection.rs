@@ -9,8 +9,8 @@ impl IntoChainMeta for String {
 }
 
 impl FromChainMeta for String {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Str(s) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Str(s) = chain? {
             Some(s.clone())
         } else {
             None
@@ -36,11 +36,11 @@ where
 }
 
 impl<T: FromChainMeta> FromChainMeta for Vec<T> {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::SubChains(v) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::SubChains(v) = chain? {
             let v = v
                 .iter()
-                .map(|f| T::from_chain(f))
+                .map(|f| T::from_chain(Some(f)))
                 .filter(|f| match f {
                     Some(_) => true,
                     None => false,
@@ -60,11 +60,11 @@ impl<T: IntoChainMeta> IntoChainMeta for HashMap<&'static str, T> {
     }
 }
 impl<T: FromChainMeta> FromChainMeta for HashMap<&'static str, T> {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::Map(map) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::Map(map) = chain? {
             let map = map
                 .iter()
-                .map(|f| (*f.0, T::from_chain(f.1)))
+                .map(|f| (*f.0, T::from_chain(Some(f.1))))
                 .filter(|f| match f.1 {
                     Some(_) => true,
                     None => false,
@@ -86,10 +86,10 @@ impl<T: IntoChainMeta> IntoChainMeta for (T,) {
 }
 
 impl<T: FromChainMeta> FromChainMeta for (T,) {
-    fn from_chain(chain: &ChainMeta) -> Option<Self> {
-        if let ChainMeta::SubChains(vc) = chain {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        if let ChainMeta::SubChains(vc) = chain? {
             if vc.len() == 1 {
-                let v = T::from_chain(vc.get(0).unwrap())?;
+                let v = T::from_chain(vc.get(0))?;
                 Some((v,))
             } else {
                 None
