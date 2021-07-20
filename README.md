@@ -1,9 +1,11 @@
 # msg_chain
+
 QQ机器人消息接收，解析trait和自动实现宏
 
 ## 提供解析[QQBot MessageChain](https://github.com/project-mirai/mirai-api-http/blob/master/docs/api/MessageType.md#%E6%B6%88%E6%81%AF%E7%B1%BB%E5%9E%8B)的工具
 
 * 使用举例
+
 ```json
 {
     "type": "Image",
@@ -14,7 +16,9 @@ QQ机器人消息接收，解析trait和自动实现宏
     "base64": null
 }
 ```
+
 对应的结构体为
+
 ```rust
 #[derive(MessageChain, LoadFormMap)]
 struct Image{
@@ -24,12 +28,14 @@ struct Image{
     base64:Option<String>,
 }
 ```
+
 然后，将`Image`和其他实现了`MessageChain`和`LoadFormMap`一起通过`msg_loader_generate!` 注册,构造函数`message_chain_loader`
 
 ```rust
 ///构造函数 message_chain_loader 用于生成MessageChain
 msg_loader_generate!(Image,Plain,At,AtAll);
 ```
+
 在获取数据后，通过`message_chain_loader`获取当前`MessageChain`对象*无匹配对象返回 `None`*, 可以通过 `into_target`转换为特定对象*转换不可行会返回 `None`*
 
 ```rust
@@ -45,9 +51,11 @@ let res : Box<dyn MessageChain> = message_chain_loader(&map).unwrap();
 let res : Image = res.into_target::<Image>().unwrap();
 
 ```
+
 然后就可以快乐使用了
 
 * 为了方便快捷得构造 `HashMap` 提供了相关宏`map_generate!`帮助构造,以下为使用方法
+
 ```rust
     //以下将会构造出
     //{
@@ -91,12 +99,14 @@ let res : Image = res.into_target::<Image>().unwrap();
 ```
 
 * `MessageChain`自动实现
-    * 类型为 `namedStruct` 或者 `Unit`
-    * 内部变量全部都实现了`IntoChainMeta` 和 `FromChainMeta`
-    * 为了方便处理，所有实现了`MessageChain`都会实现`Serialize`
+  * 类型为 `namedStruct` 或者 `Unit`
+  * 内部变量全部都实现了`IntoChainMeta` 和 `FromChainMeta`
+  * 为了方便处理，所有实现了`MessageChain`都会实现`Serialize`
 
 ## enums
-* `ChainMeta` 
+
+* `ChainMeta`
+
 ```rust
 #[derive(Debug, PartialEq, Clone)]
 pub enum ChainMeta {
@@ -110,7 +120,8 @@ pub enum ChainMeta {
 }
 ```
 
-* `Number` 
+* `Number`
+
 ```rust
 #[derive(Debug, PartialEq, Clone)]
 pub enum Number {
@@ -119,8 +130,11 @@ pub enum Number {
     Float(f64),
 }
 ```
+
 ## tarits
+
 * `IntoChainMeta` 将自身转换为`ChainMeta`对象
+
 ```rust
 pub trait IntoChainMeta {
     fn into_chain(&self) -> ChainMeta;
@@ -128,12 +142,15 @@ pub trait IntoChainMeta {
 ```
 
 * `FromChainMeta` 将`ChainMeta`转换为自身对象
+
 ```rust
 pub trait FromChainMeta: Sized {
     fn from_chain(chain: Option<&ChainMeta>) -> Option<Self>;
 }
 ```
-* `MessageChain` 
+
+* `MessageChain`
+
 ```rust
 pub trait MessageChain {
     fn get_type(&self) -> &'static str;
@@ -147,7 +164,9 @@ pub trait MessageChain {
     }
 }
 ```
+
 * `LoadFormMap`
+
 ```rust
 pub trait LoadFormMap: Sized + MessageChain {
     fn load_from_map(map: &HashMap<String, ChainMeta>) -> Option<Self>;
