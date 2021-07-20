@@ -13,3 +13,4 @@ serde_json = "1.0.64"
 
 msg_chain_derive={path="./msg_chain_derive/",version="0.1.0"}
 from_chain_derive={path="./from_chain_derive",version="0.1.0"}
+chain_meta_limit_macro={path="./chain_meta_limit_macro"}

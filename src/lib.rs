@@ -226,7 +226,7 @@ mod test {
     }
     #[derive(MessageChain, LoadFormMap, Debug, PartialEq)]
     struct Image {
-        imageId: Option<String>,
+        image_id: Option<String>,
         url: Option<String>,
         path: Option<String>,
         base64: Option<String>,
@@ -345,7 +345,7 @@ mod test {
         let res: Image = res.into_target::<Image>().unwrap();
 
         assert_eq!(res,Image{
-            imageId:Some("{01E9451B-70ED-EAE3-B37C-101F1EEBF5B5}.mirai".to_string()),
+            image_id:Some("{01E9451B-70ED-EAE3-B37C-101F1EEBF5B5}.mirai".to_string()),
             url:None,
             path:None,
             base64:None

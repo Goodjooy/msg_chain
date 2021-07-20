@@ -1,12 +1,14 @@
+use std::iter::FromIterator;
 use std::vec;
 
 use proc_macro::TokenStream;
 
 use quote::quote;
-use syn::Data;
+use quote::format_ident;
+use syn::{Data, Ident};
 use syn::{DeriveInput, Generics};
 
-#[proc_macro_derive(MessageChain)]
+#[proc_macro_derive(MessageChain,attributes(meta))]
 pub fn msg_chain_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).unwrap();
 
@@ -26,12 +28,14 @@ fn impl_msg_chains_macro(ast: &DeriveInput) -> TokenStream {
     let datas = load_data(items).unwrap();
     let datas = datas.iter();
     let match_data = datas.clone().map(|f| {
+        let a=&f.0;
+        let b=&f.1;
         quote! {
-            stringify!(#f)=>Some(self.#f.into_chain())
+            stringify!(#b)=>Some(self.#a.into_chain())
         }
     });
 
-    let match_data=if match_data.len()>0{
+    let match_data=if match_data.len() > 0{
         quote! {
             match key {
                 #( #match_data ),*
@@ -45,6 +49,8 @@ fn impl_msg_chains_macro(ast: &DeriveInput) -> TokenStream {
         }
     };
 
+    let all_key_name=datas.map(|f|&f.1);
+
     let gen = quote! {
 
         impl #impl_g MessageChain for #chain_type #impl_g #where_c {
@@ -56,7 +62,7 @@ fn impl_msg_chains_macro(ast: &DeriveInput) -> TokenStream {
             }
             fn all_keys(&self) -> Vec<&'static str> {
                 vec![
-                    # ( stringify!(#datas)),*
+                    # ( stringify!(#all_key_name)),*
                 ]
             }
         }
@@ -139,7 +145,7 @@ fn load_generics(g: &Generics) -> (quote::__private::TokenStream, quote::__priva
     (g, sub_where)
 }
 
-fn load_data(data: &Data) -> Option<Vec<syn::Ident>> {
+fn load_data(data: &Data) -> Option<Vec<(syn::Ident,syn::Ident)>> {
     if let Data::Struct(st) = data {
         let fields = &st.fields;
         match fields {
@@ -150,6 +156,8 @@ fn load_data(data: &Data) -> Option<Vec<syn::Ident>> {
                     .map(|f| &f.ident)
                     .filter(|predicate| if let None = predicate { false } else { true })
                     .map(|f| f.clone().unwrap())
+                    .map(|f|(f.clone(),transfrom_name(f.to_string())))
+
                     .collect::<Vec<_>>();
                 Some(res)
             }
@@ -160,3 +168,33 @@ fn load_data(data: &Data) -> Option<Vec<syn::Ident>> {
         None
     }
 }
+
+fn transfrom_name(name:String)->Ident{
+    name.split("_")
+    .into_iter()
+    .map(|f|f.chars())
+    .map(|mut f|{
+        let mut s=String::new();
+        let first=f.next();
+        let left_str=String::from_iter(f);
+        if let Some(ch)=first{
+            s.push_str(&ch.to_uppercase().to_string());
+            s.push_str(&left_str);
+        }
+        s
+    })
+    .reduce(|mut f,b|{f.push_str(&b);f})
+
+    .and_then(|f|{
+        let mut ch_iter=f.chars();
+        let first=ch_iter.next().unwrap();
+        let left=String::from_iter(ch_iter);
+        let mut t=String::from(first.to_lowercase().to_string());
+        t.push_str(&left);
+
+        Some(t)
+    })
+    .and_then(|f|Some(format_ident!("{}",f))).unwrap()
+}
+
+

@@ -1,5 +1,7 @@
+use std::iter::FromIterator;
+use syn::Ident;
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use syn::{Data, Generics};
 use syn::{DeriveInput, Type};
 
@@ -12,6 +14,7 @@ pub fn msg_chain_derive(input: TokenStream) -> TokenStream {
 }
 
 fn impl_from_chains_macro(ast: &DeriveInput) -> TokenStream {
+
     let name = &ast.ident;
 
     let generics = &ast.generics;
@@ -24,11 +27,13 @@ fn impl_from_chains_macro(ast: &DeriveInput) -> TokenStream {
     let c_d = data.clone();
     let create_data = c_d.iter().map(|f| {
         let name = &f.0;
-        let ty = &f.1;
+        let map_name=&f.1;
+        let ty = &f.2;
+
 
         let (t,b)=load_type(ty);
         quote! {
-            let #name  :#t = #b::from_chain(map.get(stringify!(#name)))?;
+            let #name  :#t = #b::from_chain(map.get(stringify!(#map_name)))?;
         }
     });
 
@@ -156,7 +161,7 @@ fn load_generics(g: &Generics) -> (quote::__private::TokenStream, quote::__priva
     (g, sub_where)
 }
 
-fn load_data(data: &Data) -> (Option<Vec<(syn::Ident, Type)>>, bool) {
+fn load_data(data: &Data) -> (Option<Vec<(syn::Ident,Ident, Type)>>, bool) {
     if let Data::Struct(st) = data {
         let fields = &st.fields;
         match fields {
@@ -166,7 +171,8 @@ fn load_data(data: &Data) -> (Option<Vec<(syn::Ident, Type)>>, bool) {
                     .into_iter()
                     .map(|f| (&f.ident, &f.ty))
                     .filter(|predicate| if let None = predicate.0 { false } else { true })
-                    .map(|f| (f.0.clone().unwrap(), f.1.clone()))
+                    .map(|f| (f.0.clone().unwrap(),transfrom_name(f.0.clone().unwrap().to_string()), f.1.clone()))
+                    
                     .collect::<Vec<_>>();
                 (Some(res), true)
             }
@@ -199,6 +205,33 @@ fn load_type(ty:&Type)->(quote::__private::TokenStream,quote::__private::TokenSt
             quote! {#ty},
             quote! {#ty}
         )
-    }
-    
+    }   
+}
+
+fn transfrom_name(name:String)->Ident{
+    name.split("_")
+    .into_iter()
+    .map(|f|f.chars())
+    .map(|mut f|{
+        let mut s=String::new();
+        let first=f.next();
+        let left_str=String::from_iter(f);
+        if let Some(ch)=first{
+            s.push_str(&ch.to_uppercase().to_string());
+            s.push_str(&left_str);
+        }
+        s
+    })
+    .reduce(|mut f,b|{f.push_str(&b);f})
+
+    .and_then(|f|{
+        let mut ch_iter=f.chars();
+        let first=ch_iter.next().unwrap();
+        let left=String::from_iter(ch_iter);
+        let mut t=String::from(first.to_lowercase().to_string());
+        t.push_str(&left);
+
+        Some(t)
+    })
+    .and_then(|f|Some(format_ident!("{}",f))).unwrap()
 }
