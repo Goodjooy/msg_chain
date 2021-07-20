@@ -1,7 +1,6 @@
 pub use from_chain_derive::LoadFormMap;
 pub use msg_chain_derive::MessageChain;
 use std::collections::HashMap;
-
 pub mod impls;
 
 // data that contain in evry chain
@@ -39,11 +38,11 @@ pub trait MessageChain {
 
 pub trait LoadFormMap: Sized + MessageChain {
     fn load_from_map(map: &HashMap<String, ChainMeta>) -> Option<Self>;
-    fn can_match(map:&HashMap<String,ChainMeta>)->bool;
-    fn type_eq(ty:&str)->bool;
+    fn can_match(map: &HashMap<String, ChainMeta>) -> bool;
+    fn type_eq(ty: &str) -> bool;
 }
 
-/// into Chain Meta 
+/// into Chain Meta
 ///  transfrom a type into Chain meta
 pub trait IntoChainMeta {
     fn into_chain(&self) -> ChainMeta;
@@ -70,12 +69,48 @@ macro_rules! msg_loader_generate {
 
 #[macro_export]
 macro_rules! map_generat {
-[ $( $k:expr , $v:expr ),* ] => {
-        
+( $($k:literal : $v:expr ),* )=> {
+       {
+           let mut temp=HashMap::<String,ChainMeta>::new();
+            $(
+                temp.insert($k.to_string(), $v.into_chain());
+            )*
+
+           temp
+    }
+    };
+    ( $ty:literal  ($($k:literal : $v:expr ),*))=>{
+        {
+            let mut temp=HashMap::<String,ChainMeta>::new();
+
+            temp.insert("type".to_string(), $ty.into_chain());
+            $(
+                temp.insert($k.to_string(), $v.into_chain());
+            )*
+            
+            temp
+        }
+    };
+    ($var:expr)=>{
+        {
+            let mut temp=HashMap::<String,ChainMeta>::new();
+
+            temp.insert("type".to_string(), $var.get_type().into_chain());
+            for data in $var.get_all(){
+                temp.insert(data.0.to_string(), data.1);
+            }
+
+            temp
+        }
+    };
+    ($ty:ty)=>{
+        {
+            let mut temp=HashMap::<String,ChainMeta>::new();
+            temp.insert("type".to_string(), stringify!($ty).into_chain());
+            temp
+        }
     };
 }
-
-
 
 #[cfg(test)]
 mod test {
@@ -108,17 +143,10 @@ mod test {
 
     #[test]
     fn test_from_named() {
-        let _t = vec![
-            ("type".to_string(), "Plain".into_chain()),
-            ("text".to_string(), "好耶".into_chain()),
-        ];
-        let mut map: HashMap<String, ChainMeta> = HashMap::new();
-
-        let _t: Vec<_> = _t
-            .iter()
-            .map(|f| map.insert(f.clone().0, f.clone().1))
-            .collect();
-
+        let map = map_generat!(
+            "Plain"
+            ("text": "好耶")
+        );
         let res = Plain::load_from_map(&map);
 
         assert_eq!(
@@ -158,13 +186,7 @@ mod test {
 
     #[test]
     fn test_from_unit() {
-        let _t = vec![("type".to_string(), "AtAll".into_chain())];
-        let mut map: HashMap<String, ChainMeta> = HashMap::new();
-
-        let _t: Vec<_> = _t
-            .iter()
-            .map(|f| map.insert(f.clone().0, f.clone().1))
-            .collect();
+        let map = map_generat!(AtAll);
 
         let res = AtAll::load_from_map(&map);
 
@@ -184,21 +206,15 @@ mod test {
 
     #[test]
     fn test_msg_chain_picker() {
-        let _t = vec![
-            ("type".to_string(), "Plain".into_chain()),
-            ("text".to_string(), "好耶".into_chain()),
-        ];
-        let mut map: HashMap<String, ChainMeta> = HashMap::new();
+        let pla = Plain {
+            text: Some("好耶".to_string()),
+        };
 
-        let _t: Vec<_> = _t
-            .iter()
-            .map(|f| map.insert(f.clone().0, f.clone().1))
-            .collect();
+        let map = map_generat!(&pla);
 
         let res = message_chain_loader(&map).unwrap();
-        let res=res.into_target::<Plain>().unwrap();
+        let res = res.into_target::<Plain>().unwrap();
 
-        assert_eq!("Plain", res.get_type());
-        assert_eq!("好耶".into_chain(), res.get("text").unwrap())
+        assert_eq!(pla, res);
     }
 }
