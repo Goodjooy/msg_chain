@@ -1,6 +1,7 @@
 pub use from_chain_derive::LoadFormMap;
 pub use msg_chain_derive::MessageChain;
 use std::collections::HashMap;
+
 pub mod impls;
 
 // data that contain in evry chain
@@ -68,10 +69,10 @@ macro_rules! msg_loader_generate {
 }
 
 #[macro_export]
-macro_rules! map_generat {
-( $($k:literal : $v:expr ),* )=> {
+macro_rules! map_generate {
+[ $($k:literal : $v:expr),* ]=> {
        {
-           let mut temp=HashMap::<String,ChainMeta>::new();
+           let mut temp = HashMap::<String,ChainMeta>::new();
             $(
                 temp.insert($k.to_string(), $v.into_chain());
             )*
@@ -79,34 +80,27 @@ macro_rules! map_generat {
            temp
     }
     };
-    ( $ty:literal  ($($k:literal : $v:expr ),*))=>{
+    ( $ty:ty => [$($k:ident : $v:expr),*])=>{
         {
-            let mut temp=HashMap::<String,ChainMeta>::new();
+            let mut temp = HashMap::<String,ChainMeta>::new();
 
-            temp.insert("type".to_string(), $ty.into_chain());
+            temp.insert("type".to_string(), stringify!($ty).into_chain());
             $(
-                temp.insert($k.to_string(), $v.into_chain());
+                temp.insert(stringify!($k).to_string(), $v.into_chain());
             )*
-            
+
             temp
         }
     };
     ($var:expr)=>{
         {
-            let mut temp=HashMap::<String,ChainMeta>::new();
+            let mut temp = HashMap::<String,ChainMeta>::new();
 
             temp.insert("type".to_string(), $var.get_type().into_chain());
             for data in $var.get_all(){
                 temp.insert(data.0.to_string(), data.1);
             }
 
-            temp
-        }
-    };
-    ($ty:ty)=>{
-        {
-            let mut temp=HashMap::<String,ChainMeta>::new();
-            temp.insert("type".to_string(), stringify!($ty).into_chain());
             temp
         }
     };
@@ -120,12 +114,19 @@ mod test {
     struct Plain {
         text: Option<String>,
     }
-
+    #[derive(MessageChain, LoadFormMap, Debug, PartialEq)]
+    struct Image {
+        imageId: Option<String>,
+        url: Option<String>,
+        path: Option<String>,
+        base64: Option<String>,
+    }
     #[test]
     fn test_named() {
         let msg = Plain {
             text: Some(String::from("Rust NB")),
         };
+
         // type
         assert_eq!(msg.get_type(), "Plain");
         // exist data
@@ -143,9 +144,12 @@ mod test {
 
     #[test]
     fn test_from_named() {
-        let map = map_generat!(
-            "Plain"
-            ("text": "好耶")
+        let map = map_generate!(
+            Plain=>
+            [
+                text: "好耶",
+                id: 114145
+            ]
         );
         let res = Plain::load_from_map(&map);
 
@@ -186,7 +190,7 @@ mod test {
 
     #[test]
     fn test_from_unit() {
-        let map = map_generat!(AtAll);
+        let map = map_generate!(AtAll=>[]);
 
         let res = AtAll::load_from_map(&map);
 
@@ -202,19 +206,40 @@ mod test {
         assert_eq!(None, res)
     }
 
-    msg_loader_generate!(Plain, AtAll);
+    msg_loader_generate!(Plain, AtAll, Image);
 
     #[test]
     fn test_msg_chain_picker() {
-        let pla = Plain {
-            text: Some("好耶".to_string()),
-        };
+        let pla = Plain { text: None };
 
-        let map = map_generat!(&pla);
+        let map = map_generate!(&pla);
 
         let res = message_chain_loader(&map).unwrap();
         let res = res.into_target::<Plain>().unwrap();
 
         assert_eq!(pla, res);
+    }
+
+    #[test]
+    fn test_option_items() {
+        let map: HashMap<String, ChainMeta> = map_generate!(
+            Image=>
+            [
+                imageId: "{01E9451B-70ED-EAE3-B37C-101F1EEBF5B5}.mirai",
+                url: Option::<String>::None
+            ]
+        );
+        let map2=map_generate!["type":"AtAll"];
+
+        let res: Box<dyn MessageChain> = message_chain_loader(&map).unwrap();
+        //可以转换为指定类型
+        let res: Image = res.into_target::<Image>().unwrap();
+
+        assert_eq!(res,Image{
+            imageId:Some("{01E9451B-70ED-EAE3-B37C-101F1EEBF5B5}.mirai".to_string()),
+            url:None,
+            path:None,
+            base64:None
+        })
     }
 }
