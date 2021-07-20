@@ -7,7 +7,6 @@ pub mod impls;
 // data that contain in evry chain
 #[derive(Debug, PartialEq, Clone)]
 pub enum ChainMeta {
-
     Null,
     Str(String),
     Bool(bool),
@@ -25,7 +24,6 @@ pub enum Number {
     Float(f64),
 }
 
-
 /// Message Chain
 pub trait MessageChain {
     fn get_type(&self) -> &'static str;
@@ -41,6 +39,8 @@ pub trait MessageChain {
 
 pub trait LoadFormMap: Sized + MessageChain {
     fn load_from_map(map: &HashMap<String, ChainMeta>) -> Option<Self>;
+    fn can_match(map:&HashMap<String,ChainMeta>)->bool;
+    fn type_eq(ty:&str)->bool;
 }
 
 /// into Chain Meta 
@@ -58,8 +58,8 @@ macro_rules! msg_loader_generate {
     ( $( $x:ty ),* ) => {
         pub fn message_chain_loader(map: &HashMap<String, ChainMeta>)->Option<Box<dyn MessageChain>>{
             $(
-                if let Some(value)=<$x>::load_from_map(map){
-                    return Some(Box::new(value));
+                if <$x>::can_match(map){
+                    return Some(Box::new(<$x>::load_from_map(map)?));
                 }
             )*
 
@@ -67,6 +67,15 @@ macro_rules! msg_loader_generate {
         }
     };
 }
+
+#[macro_export]
+macro_rules! map_generat {
+[ $( $k:expr , $v:expr ),* ] => {
+        
+    };
+}
+
+
 
 #[cfg(test)]
 mod test {

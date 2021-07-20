@@ -81,12 +81,17 @@ impl Serialize for dyn MessageChain {
 
 impl dyn MessageChain {
     pub fn into_target<T: LoadFormMap>(&self) -> Option<T> {
-        let mut map = HashMap::new();
-        map.insert("type".to_string(), self.get_type().into_chain());
+        if T::type_eq(self.get_type()){
 
-        for (k, v) in self.get_all() {
-            map.insert(k.to_string(), v);
+            let mut map = HashMap::new();
+            map.insert("type".to_string(), self.get_type().into_chain());
+            
+            for (k, v) in self.get_all() {
+                map.insert(k.to_string(), v);
+            }
+            T::load_from_map(&map)
+        }else {
+            None
         }
-        T::load_from_map(&map)
     }
 }

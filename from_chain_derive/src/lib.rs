@@ -49,18 +49,28 @@ fn impl_from_chains_macro(ast: &DeriveInput) -> TokenStream {
     let gen = quote! {
         impl #head_g LoadFormMap  for #name #head_g #where_c {
             fn load_from_map(map: &HashMap<String, ChainMeta>) -> Option<Self> {
-                let __ty = map.get("type");
-                let s = String::from_chain(__ty)?;
-                if s != stringify!(#name) {
-                    return None;
+                if ! Self::can_match(map){
+                    return None
                 }
-                
-
                 #(#create_data)*
-
                 Some(
                     #new
                 )
+            }
+            fn can_match(map:&HashMap<String,ChainMeta>)->bool{
+                let __ty = map.get("type");
+                let s = String::from_chain(__ty);
+                match s{
+                    Some(s)=>
+                    {
+                        Self::type_eq(&s)
+                    },
+                    _=>false
+                }
+            }
+
+            fn type_eq(ty:&str)->bool{
+                ty == stringify!(#name) 
             }
         }
     };
