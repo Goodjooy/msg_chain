@@ -34,6 +34,17 @@ impl<T: FromChainMeta> FromChainMeta for Option<T> {
     }
 }
 
+impl IntoChainMeta for ChainMeta {
+    fn into_chain(&self) -> ChainMeta {
+        self.clone()
+    }
+}
+impl FromChainMeta for ChainMeta {
+    fn from_chain(chain: Option<&ChainMeta>) -> Option<Self> {
+        Some(chain?.clone())
+    }
+}
+
 impl ChainMeta {
     pub fn into_target<T: FromChainMeta>(&self) -> Option<T> {
         T::from_chain(Some(self))
