@@ -106,3 +106,49 @@ impl dyn MessageChain {
         }
     }
 }
+
+
+#[cfg(test)]
+mod test{
+    use serde_json::to_string;
+
+    use super::*;
+
+    #[derive(MessageChain)]
+
+    struct Text {
+        txt:String,
+        show_all:Option<bool>
+    }
+
+    #[test]
+    fn test_chain_meta2json() {
+     let meta=ChainMeta::Str(String::from("113"));
+     let res=to_string(&meta);
+     
+     println!("{}",res.unwrap())
+    }
+
+    #[test]
+    fn test_msg_chain_to_json() {
+        let text=Text{txt:String::from("111"),show_all:None};
+        let bo:Box<dyn MessageChain>=Box::new(text);
+        let res=to_string(&bo);
+
+        println!("{}",res.unwrap())
+    }
+
+    #[test]
+    fn test_message_chains() {
+        let text=Text{txt:String::from("111"),show_all:None};
+        let text2=Text{txt:String::from("11122"),show_all:Some(false)};
+        let bo:Box<dyn MessageChain>=Box::new(text);
+        let bo2:Box<dyn MessageChain>=Box::new(text2);
+
+        let res=vec![bo,bo2];
+        let res=to_string(&res);
+
+        println!("{}",res.unwrap())
+        
+    }
+}
