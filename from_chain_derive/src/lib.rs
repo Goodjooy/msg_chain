@@ -29,8 +29,6 @@ fn impl_from_chains_macro(ast: &DeriveInput) -> TokenStream {
         let name = &f.0;
         let map_name=&f.1;
         let ty = &f.2;
-
-
         let (t,b)=load_type(ty);
         quote! {
             let #name  :#t = #b::from_chain(map.get(stringify!(#map_name)))?;
@@ -53,7 +51,7 @@ fn impl_from_chains_macro(ast: &DeriveInput) -> TokenStream {
 
     let gen = quote! {
         impl #head_g LoadFormMap  for #name #head_g #where_c {
-            fn load_from_map(map: &HashMap<String, ChainMeta>) -> Option<Self> {
+            fn load_from_map(map: &std::collections::HashMap<String, ChainMeta>) -> Option<Self> {
                 if ! Self::can_match(map){
                     return None
                 }
@@ -62,7 +60,7 @@ fn impl_from_chains_macro(ast: &DeriveInput) -> TokenStream {
                     #new
                 )
             }
-            fn can_match(map:&HashMap<String,ChainMeta>)->bool{
+            fn can_match(map:&std::collections::HashMap<String,ChainMeta>)->bool{
                 let __ty = map.get("type");
                 let s = String::from_chain(__ty);
                 match s{

@@ -83,7 +83,7 @@ impl Serialize for dyn MessageChain {
 
         let _t = all_data
             .iter()
-            .map(|f| data.serialize_field(f.0, f))
+            .map(|f| data.serialize_field(f.0, &f.1))
             .collect::<Vec<_>>();
 
         data.end()
